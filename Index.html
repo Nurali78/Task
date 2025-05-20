@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasks Management System</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600&display=swap');
+    :root {
+      --primary-color: #4f46e5;
+      --secondary-color: #6366f1;
+      --background-color: linear-gradient(180deg, #f3f0ff 0%, #e4e0ff 100%);
+      --card-background: #ffffff;
+      --text-color: #111827;
+      --text-muted: #6b7280;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+      --border-radius: 12px;
+      --transition-speed: 0.3s;
+      --table-header-bg: #eef2ff;
+      --table-border-color: #e0e7ff;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--background-color);
+      margin: 0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      background: var(--card-background);
+      max-width: 960px;
+      width: 100%;
+      border-radius: var(--border-radius);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.1);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    h1 {
+      font-weight: 700;
+      font-size: 2rem;
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 0;
+    }
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+      gap: 1rem 1.5rem;
+      align-items: end;
+    }
+    label {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--primary-color);
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    input[type="text"],
+    input[type="date"],
+    select,
+    textarea {
+      padding: 0.5rem 0.75rem;
+      border: 1.5px solid #d1d5db;
+      border-radius: var(--border-radius);
+      font-size: 1rem;
+      resize: vertical;
+      width: 100%;
+      transition: border-color var(--transition-speed);
+    }
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 5px var(--secondary-color);
+    }
+    textarea {
+      min-height: 50px;
+      max-height: 120px;
+    }
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.9rem 1rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background-color var(--transition-speed), transform var(--transition-speed);
+      user-select: none;
+      grid-column: 1 / -1;
+      width: 140px;
+      justify-self: center;
+    }
+    button:hover,
+    button:focus {
+      background: var(--secondary-color);
+      transform: scale(1.05);
+      outline: none;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 2px 12px rgb(0 0 0 / 0.05);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+    thead {
+      background: var(--table-header-bg);
+      color: var(--primary-color);
+      font-weight: 700;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--table-border-color);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+    tbody tr:hover {
+      background: #f0f5ff;
+    }
+    .status-open {
+      color: #2563eb; /* blue */
+      font-weight: 700;
+    }
+    .status-inprogress {
+      color: #d97706; /* amber */
+      font-weight: 700;
+    }
+    .status-closed {
+      color: var(--success-color);
+      font-weight: 700;
+    }
+    .priority-high {
+      color: var(--danger-color);
+      font-weight: 700;
+    }
+    .priority-medium {
+      color: #ea580c;
+      font-weight: 700;
+    }
+    .priority-low {
+      color: #64748b;
+      font-weight: 700;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .action-buttons button {
+      background: transparent;
+      border: 1.5px solid var(--primary-color);
+      border-radius: var(--border-radius);
+      padding: 0.3rem 0.6rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--transition-speed);
+      color: var(--primary-color);
+      user-select: none;
+    }
+    .action-buttons button:hover,
+    .action-buttons button:focus {
+      background: var(--primary-color);
+      color: white;
+      outline: none;
+    }
+    .action-buttons button.delete {
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+    .action-buttons button.delete:hover,
+    .action-buttons button.delete:focus {
+      background: var(--danger-color);
+      color: white;
+    }
+    /* Edit modal styling */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      box-shadow: 0 10px 30px rgb(0 0 0 / 0.2);
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      font-weight: 700;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--danger-color);
+      cursor: pointer;
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+      user-select: none;
+    }
+    @media (max-width: 720px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+      button {
+        width: 100%;
+        grid-column: 1;
+      }
+      th, td {
+        padding: 0.5rem 0.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-label="Tasks Management System">
+    <h1>Tasks Management System</h1>
+    <form id="task-form" aria-label="Add new task">
+      <div>
+        <label for="task-name">Task Name *</label>
+        <input type="text" id="task-name" required autocomplete="off" />
+      </div>
+      <div>
+        <label for="task-remarks">Remarks</label>
+        <textarea id="task-remarks" rows="2" placeholder="Additional remarks"></textarea>
+      </div>
+      <div>
+        <label for="task-status">Status *</label>
+        <select id="task-status" required>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Closed">Closed</option>
+        </select>
+      </div>
+      <div>
+        <label for="task-open-date">Open Date *</label>
+        <input type="date" id="task-open-date" required />
+      </div>
+      <div>
+        <label for="task-closed-date">Closed Date</label>
+        <input type="date" id="task-closed-date" disabled />
+      </div>
+      <div>
+        <label for="task-given-by">Task Given By</label>
+        <input type="text" id="task-given-by" autocomplete="off" />
+      </div>
+      <div>
+        <label for="task-responsibility">Responsibility</label>
+        <input type="text" id="task-responsibility" autocomplete="off" />
+      </div>
+      <div>
+        <label for="task-priority">Priority *</label>
+        <select id="task-priority" required>
+          <option value="High">High</option>
+          <option value="Medium" selected>Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+      <div>
+        <!-- empty grid cell for alignment -->
+      </div>
+      <div>
+        <button type="submit" id="add-task-button">Add Task</button>
+      </div>
+    </form>
+    <table aria-label="Tasks List" id="tasks-table">
+      <thead>
+        <tr>
+          <th>Sl No.</th>
+          <th>Task Name</th>
+          <th>Remarks</th>
+          <th>Status</th>
+          <th>Open Date</th>
+          <th>Closed Date</th>
+          <th>Task Given By</th>
+          <th>Responsibility</th>
+          <th>Priority</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tasks-tbody">
+        <!-- Tasks rows go here -->
+      </tbody>
+    </table>
+  </main>
+
+  <!-- Edit modal -->
+  <div class="modal-overlay" id="edit-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" tabindex="-1">
+    <div class="modal" role="document">
+      <button class="modal-close" id="edit-modal-close" aria-label="Close edit dialog">&times;</button>
+      <h2 class="modal-header" id="edit-modal-title">Edit Task</h2>
+      <form id="edit-task-form" aria-label="Edit task form">
+        <input type="hidden" id="edit-task-id" />
+        <div>
+          <label for="edit-task-name">Task Name *</label>
+          <input type="text" id="edit-task-name" required autocomplete="off" />
+        </div>
+        <div>
+          <label for="edit-task-remarks">Remarks</label>
+          <textarea id="edit-task-remarks" rows="2"></textarea>
+        </div>
+        <div>
+          <label for="edit-task-status">Status *</label>
+          <select id="edit-task-status" required>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Closed">Closed</option>
+          </select>
+        </div>
+        <div>
+          <label for="edit-task-open-date">Open Date *</label>
+          <input type="date" id="edit-task-open-date" required />
+        </div>
+        <div>
+          <label for="edit-task-closed-date">Closed Date</label>
+          <input type="date" id="edit-task-closed-date" disabled />
+        </div>
+        <div>
+          <label for="edit-task-given-by">Task Given By</label>
+          <input type="text" id="edit-task-given-by" autocomplete="off" />
+        </div>
+        <div>
+          <label for="edit-task-responsibility">Responsibility</label>
+          <input type="text" id="edit-task-responsibility" autocomplete="off" />
+        </div>
+        <div>
+          <label for="edit-task-priority">Priority *</label>
+          <select id="edit-task-priority" required>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div style="margin-top:1rem; text-align: center;">
+          <button type="submit">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Elements
+      const taskForm = document.getElementById('task-form');
+      const tasksTableBody = document.getElementById('tasks-tbody');
+
+      const inputName = document.getElementById('task-name');
+      const inputRemarks = document.getElementById('task-remarks');
+      const inputStatus = document.getElementById('task-status');
+      const inputOpenDate = document.getElementById('task-open-date');
+      const inputClosedDate = document.getElementById('task-closed-date');
+      const inputGivenBy = document.getElementById('task-given-by');
+      const inputResponsibility = document.getElementById('task-responsibility');
+      const inputPriority = document.getElementById('task-priority');
+
+      // Edit modal elements
+      const editModal = document.getElementById('edit-modal');
+      const editModalCloseBtn = document.getElementById('edit-modal-close');
+      const editTaskForm = document.getElementById('edit-task-form');
+
+      const editInputId = document.getElementById('edit-task-id');
+      const editInputName = document.getElementById('edit-task-name');
+      const editInputRemarks = document.getElementById('edit-task-remarks');
+      const editInputStatus = document.getElementById('edit-task-status');
+      const editInputOpenDate = document.getElementById('edit-task-open-date');
+      const editInputClosedDate = document.getElementById('edit-task-closed-date');
+      const editInputGivenBy = document.getElementById('edit-task-given-by');
+      const editInputResponsibility = document.getElementById('edit-task-responsibility');
+      const editInputPriority = document.getElementById('edit-task-priority');
+
+      // Data storage
+      let tasks = [];
+
+      // Utility: Save to localStorage
+      function saveTasks() {
+        localStorage.setItem('tasks_management_system_tasks_v2', JSON.stringify(tasks));
+      }
+      // Utility: Load from localStorage
+      function loadTasks() {
+        const saved = localStorage.getItem('tasks_management_system_tasks_v2');
+        if (saved) {
+          tasks = JSON.parse(saved);
+        } else {
+          tasks = [];
+        }
+      }
+
+      // Format date string YYYY-MM-DD to readable format
+      function formatDate(dateStr) {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        if (isNaN(d)) return '';
+        return d.toLocaleDateString(undefined, {year: 'numeric', month: 'short', day: 'numeric'});
+      }
+      // Validate date string YYYY-MM-DD
+      function isValidDate(dateStr) {
+        return dateStr && !isNaN(new Date(dateStr));
+      }
+
+      // Render all tasks in the table
+      function renderTasks() {
+        tasksTableBody.innerHTML = '';
+        if (tasks.length === 0) {
+          const emptyRow = document.createElement('tr');
+          const emptyCell = document.createElement('td');
+          emptyCell.colSpan = 10;
+          emptyCell.style.textAlign = 'center';
+          emptyCell.style.color = 'var(--text-muted)';
+          emptyCell.textContent = 'No tasks to display. Add some!';
+          emptyRow.appendChild(emptyCell);
+          tasksTableBody.appendChild(emptyRow);
+          return;
+        }
+        tasks.forEach((task, index) => {
+          const tr = document.createElement('tr');
+
+          // Sl No.
+          const tdSlNo = document.createElement('td');
+          tdSlNo.textContent = index + 1;
+          tr.appendChild(tdSlNo);
+
+          // Task Name
+          const tdName = document.createElement('td');
+          tdName.textContent = task.name;
+          tr.appendChild(tdName);
+
+          // Remarks
+          const tdRemarks = document.createElement('td');
+          tdRemarks.textContent = task.remarks || '';
+          tr.appendChild(tdRemarks);
+
+          // Status
+          const tdStatus = document.createElement('td');
+          tdStatus.textContent = task.status;
+          const statusClass = {
+            'Open': 'status-open',
+            'In Progress': 'status-inprogress',
+            'Closed': 'status-closed'
+          }[task.status] || '';
+          tdStatus.className = statusClass;
+          tr.appendChild(tdStatus);
+
+          // Open Date
+          const tdOpenDate = document.createElement('td');
+          tdOpenDate.textContent = formatDate(task.openDate);
+          tr.appendChild(tdOpenDate);
+
+          // Closed Date
+          const tdClosedDate = document.createElement('td');
+          tdClosedDate.textContent = isValidDate(task.closedDate) ? formatDate(task.closedDate) : '';
+          tr.appendChild(tdClosedDate);
+
+          // Task Given By
+          const tdGivenBy = document.createElement('td');
+          tdGivenBy.textContent = task.givenBy || '';
+          tr.appendChild(tdGivenBy);
+
+          // Responsibility
+          const tdResponsibility = document.createElement('td');
+          tdResponsibility.textContent = task.responsibility || '';
+          tr.appendChild(tdResponsibility);
+
+          // Priority
+          const tdPriority = document.createElement('td');
+          tdPriority.textContent = task.priority;
+          const priorityClass = {
+            'High': 'priority-high',
+            'Medium': 'priority-medium',
+            'Low': 'priority-low',
+          }[task.priority] || '';
+          tdPriority.className = priorityClass;
+          tr.appendChild(tdPriority);
+
+          // Actions
+          const tdActions = document.createElement('td');
+          tdActions.className = 'action-buttons';
+
+          const editBtn = document.createElement('button');
+          editBtn.textContent = 'Edit';
+          editBtn.type = 'button';
+          editBtn.title = 'Edit Task';
+          editBtn.addEventListener('click', () => openEditModal(task.id));
+          tdActions.appendChild(editBtn);
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.textContent = 'Delete';
+          deleteBtn.type = 'button';
+          deleteBtn.title = 'Delete Task';
+          deleteBtn.className = 'delete';
+          deleteBtn.addEventListener('click', () => {
+            if(confirm(`Are you sure you want to delete task "${task.name}"?`)) {
+              deleteTask(task.id);
+            }
+          });
+          tdActions.appendChild(deleteBtn);
+
+          tr.appendChild(tdActions);
+          tasksTableBody.appendChild(tr);
+        });
+      }
+
+      // Add new task
+      function addTask(task) {
+        tasks.unshift(task);
+        saveTasks();
+        renderTasks();
+      }
+
+      // Update existing task
+      function updateTask(taskId, newData) {
+        const idx = tasks.findIndex(t => t.id === taskId);
+        if (idx !== -1) {
+          tasks[idx] = {...tasks[idx], ...newData};
+          saveTasks();
+          renderTasks();
+        }
+      }
+
+      // Delete task
+      function deleteTask(taskId) {
+        tasks = tasks.filter(t => t.id !== taskId);
+        saveTasks();
+        renderTasks();
+      }
+
+      // Generate a unique ID (simple version)
+      function generateId() {
+        return 'task_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      }
+
+      // Reset form inputs after submission
+      function resetFormInputs() {
+        taskForm.reset();
+        inputClosedDate.disabled = true;
+        inputOpenDate.valueAsDate = new Date();
+        inputClosedDate.value = '';
+        inputStatus.value = 'Open';
+      }
+
+      // Toggle Closed Date input enabled/disabled based on status
+      function toggleClosedDateInput(targetStatus, closedDateInput, fallbackDisable = false) {
+        if(targetStatus === 'Closed') {
+          closedDateInput.disabled = false;
+          if(!closedDateInput.value) {
+            const todayStr = new Date().toISOString().substr(0,10);
+            closedDateInput.value = todayStr;
+          }
+        } else {
+          if(fallbackDisable) {
+            closedDateInput.disabled = true;
+            closedDateInput.value = '';
+          }
+        }
+      }
+
+      // Handle main form status change to toggle closed date input
+      inputStatus.addEventListener('change', (e) => {
+        toggleClosedDateInput(e.target.value, inputClosedDate, true);
+      });
+
+      // Handle edit form status change
+      editInputStatus.addEventListener('change', (e) => {
+        toggleClosedDateInput(e.target.value, editInputClosedDate);
+      });
+
+      // Handle add task form submission
+      taskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = inputName.value.trim();
+        if (!name) {
+          alert('Task Name is required.');
+          inputName.focus();
+          return;
+        }
+        const status = inputStatus.value;
+        const openDate = inputOpenDate.value;
+
+        if(!openDate) {
+          alert('Open Date is required.');
+          inputOpenDate.focus();
+          return;
+        }
+
+        let closedDate = inputClosedDate.value;
+        if(status !== 'Closed') {
+          closedDate = '';
+        } else if(!closedDate) {
+          const todayStr = new Date().toISOString().substr(0,10);
+          closedDate = todayStr;
+        }
+
+        const task = {
+          id: generateId(),
+          name: name,
+          remarks: inputRemarks.value.trim(),
+          status: status,
+          openDate: openDate,
+          closedDate: closedDate,
+          givenBy: inputGivenBy.value.trim(),
+          responsibility: inputResponsibility.value.trim(),
+          priority: inputPriority.value
+        };
+
+        addTask(task);
+        resetFormInputs();
+        inputName.focus();
+      });
+
+      // Open Edit modal with task data filled
+      function openEditModal(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if(!task) return;
+
+        editInputId.value = task.id;
+        editInputName.value = task.name;
+        editInputRemarks.value = task.remarks || '';
+        editInputStatus.value = task.status;
+        editInputOpenDate.value = task.openDate;
+        editInputGivenBy.value = task.givenBy || '';
+        editInputResponsibility.value = task.responsibility || '';
+        editInputPriority.value = task.priority || 'Medium';
+
+        if(task.status === 'Closed' && task.closedDate) {
+          editInputClosedDate.value = task.closedDate;
+          editInputClosedDate.disabled = false;
+        } else {
+          editInputClosedDate.value = '';
+          editInputClosedDate.disabled = true;
+        }
+
+        editModal.classList.add('active');
+        editModal.focus();
+      }
+
+      // Close Edit modal
+      function closeEditModal() {
+        editModal.classList.remove('active');
+      }
+
+      editModalCloseBtn.addEventListener('click', closeEditModal);
+      editModal.addEventListener('click', (e) => {
+        if(e.target === editModal) closeEditModal();
+      });
+      // Close modal on ESC key
+      document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && editModal.classList.contains('active')) {
+          closeEditModal();
+        }
+      });
+
+      // Handle edit form submission
+      editTaskForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const id = editInputId.value;
+        const name = editInputName.value.trim();
+        if(!name) {
+          alert('Task Name is required.');
+          editInputName.focus();
+          return;
+        }
+        const status = editInputStatus.value;
+        const openDate = editInputOpenDate.value;
+        if(!openDate) {
+          alert('Open Date is required.');
+          editInputOpenDate.focus();
+          return;
+        }
+        let closedDate = editInputClosedDate.value;
+        if(status !== 'Closed') {
+          closedDate = '';
+        } else if(!closedDate) {
+          closedDate = new Date().toISOString().substr(0,10);
+        }
+        const updatedTask = {
+          name,
+          remarks: editInputRemarks.value.trim(),
+          status,
+          openDate,
+          closedDate,
+          givenBy: editInputGivenBy.value.trim(),
+          responsibility: editInputResponsibility.value.trim(),
+          priority: editInputPriority.value
+        };
+        updateTask(id, updatedTask);
+        closeEditModal();
+      });
+
+      // Initialize open date input to today
+      inputOpenDate.valueAsDate = new Date();
+
+      // Initialize
+      loadTasks();
+      renderTasks();
+      toggleClosedDateInput(inputStatus.value, inputClosedDate, true);
+    })();
+  </script>
+</body>
+</html>
+
+
